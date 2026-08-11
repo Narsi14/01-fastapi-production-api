@@ -9,7 +9,7 @@ venv/
 env/
 
 # Environment variables
-.env.*
+.env.development
 
 # Testing
 .pytest_cache/
