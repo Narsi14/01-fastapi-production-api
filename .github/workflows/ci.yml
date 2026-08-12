@@ -6,8 +6,29 @@ on:
     branches: [main,dev]
   pull_request:
     branches: [main,dev]
+    types: [opened, synchronize, edited]
 
 jobs:
+  pr_title_check:
+    name: PR Title Check
+    runs-on: ubuntu-latest
+    #This job should only run on Pull Request, not on pushes
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Validate PR TItle Convention
+        env:
+          TITLE: ${{ github.event.pull_request.title }}}}
+        run: |
+          #Matches feat:, fix:, chore:, docs:, style:, perf:, test:, refactor:
+          #Also allows optionsl scopes like feat(api):
+          regex="^(feat|fix|chore|docs|style|perf|test|refactor)(\([a-zA-Z0-9_-]+\))?: .+"
+          if [[ ! $TITLE =~ $regex ]]; then
+            echo "Error: PR title does not follow the conventional commit format."
+            echo "Please use one of the following prefixes: feat, fix, chore, docs, style, perf, test, refactor"
+            echo "Example: feat(api): add new endpoint"
+            exit 1
+          fi
+          echo "PR title format is correct." 
   quality_checks:
     name: Quality Checks
     runs-on: ubuntu-latest
@@ -34,8 +55,24 @@ jobs:
 
       - name: Check Formatting
         run: uv run ruff format --check .
-  
-  test_casee:
+
+      - name: Suggest Fixes on Failure
+        if: failure()
+        run: |
+          #Print to the Ci logs
+          echo "Code quality checks failed"
+          echo "please run the following commands locally to fix the issues:"
+          echo " uv run ruff check --fix . "
+          echo " uv run ruff format . "
+          
+          # print a nice Markdown message to Github Actions Summary page
+          echo " ### Code Quality Checks Failed" >> $GITHUB_STEP_SUMMARY
+          echo "To fix the issues, run the following commands locally and push your changes: ">> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          echo "uv run ruff check --fix ." >> $GITHUB_STEP_SUMMARY
+          echo "uv run ruff format ." >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+  test_cases:
     name: Test Cases
     runs-on: ubuntu-latest
     permissions:
