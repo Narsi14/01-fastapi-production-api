@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+
 from app.api.v1.tasks import router as tasks_router
 
 app = FastAPI(title="Production FastAPI API", version="0.1.0")
