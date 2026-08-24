@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: task-api-postgres
+    restart: unless-stopped
+    # Indent these properties under the 'postgres' service
+    environment:
+      POSTGRES_DB: taskdb
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskuser -d taskdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# You must declare named volumes at the root level (no indentation)
+volumes:
+  postgres_data:
